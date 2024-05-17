@@ -1,13 +1,22 @@
 {
   "name": "personal-bills-strapi",
-"private": true,
+  "private": true,
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "develop:backend": "yarn workspace backend-strapi run develop",
+    "develop:front": "yarn workspace dashboard run develop",
+    "develop": "concurrently \"yarn develop:backend\" \"yarn develop:front\""
   },
   "author": "",
   "license": "ISC",
-  "workspaces": ["apps/*"]
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nx": "19.0.4"
+  }
 }

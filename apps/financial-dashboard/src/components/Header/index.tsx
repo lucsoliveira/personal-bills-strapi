@@ -1,9 +1,9 @@
 'use client';
+import React, { Dispatch } from 'react';
 import { BiSearch, BiSun } from 'react-icons/bi';
 import { MdNotificationsNone } from 'react-icons/md';
-import { StyledHeader } from './style';
-import React, { Dispatch } from 'react';
 import OpenSidebarButton from './components/OpenSidebarButton';
+import { StyledHeader } from './style';
 
 interface iHeader {
   isLightTheme: boolean;
@@ -41,7 +41,7 @@ const Header = ({ isLightTheme, setIsLightTheme }: iHeader) => {
             <span></span>
           </div>
           <div className="info-wrapper">
-            <span className="name">Jane Cooper</span>
+            <span className="name">Jane Cooper 123</span>
             <span className="username">@cooperuser</span>
           </div>
         </div>
