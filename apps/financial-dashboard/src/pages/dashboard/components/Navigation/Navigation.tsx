@@ -8,7 +8,14 @@ import medicalIcon from '../../../../assets/icons/medical-icon.svg';
 import veterinaryIcon from '../../../../assets/icons/veterinary-icon.svg';
 import { currentFormat } from '../../../../utils/currencyFormat';
 import { dateFormatTimeAgo } from '../../../../utils/DateFormat';
-import { dataPendingPayments, iDataPendingPayments } from '../../../../mock/dashboard';
+import {
+  dataPendingPayments,
+  iDataPendingPayments,
+} from '../../../../mock/dashboard';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Spinner } from '../../../../components/Spinner';
+import { Transaction } from '../../../../types/transactions';
 
 const getIcon = (type: string) => {
   switch (type) {
@@ -41,12 +48,7 @@ const getIcon = (type: string) => {
       );
     case 'medical':
       return (
-        <img
-          src={medicalIcon}
-          alt="Ícone de Medicina"
-          width={24}
-          height={24}
-        />
+        <img src={medicalIcon} alt="Ícone de Medicina" width={24} height={24} />
       );
     case 'furniture':
       return (
@@ -62,72 +64,104 @@ const getIcon = (type: string) => {
   }
 };
 
-interface iMockRecentTransactions {
-  id: number;
-  imgUrl: string;
-  userName: string;
-  hour: string;
-  money: number;
-  isPositive: boolean;
-}
-
-const mockRecentTransations: iMockRecentTransactions[] = [
-  {
-    id: 1,
-    imgUrl: './user-2.png',
-    userName: 'Leslie Alexander',
-    hour: '2024-04-20T21:00:59+0000',
-    money: 300,
-    isPositive: true,
-  },
-  {
-    id: 2,
-    imgUrl: './user-3.png',
-    userName: 'Jenny Wilson',
-    hour: '2024-04-20T20:00:59+0000',
-    money: 500,
-    isPositive: false,
-  },
-  {
-    id: 3,
-    imgUrl: './user-4.png',
-    userName: 'Jacob Jones',
-    hour: '2024-04-20T17:00:59+0000',
-    money: 750,
-    isPositive: true,
-  },
-  {
-    id: 4,
-    imgUrl: './user-5.png',
-    userName: 'Jerome Bell',
-    hour: '2024-04-20T10:00:59+0000',
-    money: 1000,
-    isPositive: false,
-  },
-];
-
 const RecentTransactions = () => {
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
+    []
+  );
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const fetchTransactions = async ({
+    pageSize,
+    sortBy,
+  }: {
+    pageSize: number;
+    sortBy?: string[];
+  }) => {
+    const sort = sortBy
+      ? {
+          sort: {
+            ...sortBy,
+          },
+        }
+      : {};
+
+    const results = await axios.request({
+      baseURL: 'http://localhost:1337/api/transactions?populate=*',
+      params: {
+        pagination: {
+          pageSize,
+        },
+        ...sort,
+      },
+      headers: {
+        Authorization: `Bearer ${'30373287118fd27df9a94adc4d6066cac568afdb7d7b082d282c6e40cd500ba106c43e7a174513daa1ec4d21d8bb3199ad70ef68e96072cfa1364260b566208ee9bca1a79da0ab123effdbb43a4caf0bb1afa6786c8d183b272a10948e58ab1085809f1071f47c97f655b4106bedf18f54b6bda83e01fbf8bb91fbc33f5108f7'}`,
+      },
+    });
+
+    const data = results.data.data;
+    const dataNormalized = data.map(
+      (item: { id: number; attributes: Transaction }) => {
+        return {
+          id: item.id,
+          ...item.attributes,
+        };
+      }
+    );
+    return {
+      transactions: dataNormalized,
+    };
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchTransactions({
+      pageSize: 4,
+      sortBy: ['date:desc'],
+    })
+      .then((res) => {
+        setRecentTransactions(res.transactions);
+      })
+      .catch((error) => {
+        console.error(error.message);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
   return (
     <div className="recent-transictions">
       <div className="header">
         <h3>Recent Transactions</h3>
         <a href="#">See all</a>
       </div>
-      {mockRecentTransations.map((item: iMockRecentTransactions) => (
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%',
+        }}
+      >
+        {isLoading && <Spinner />}
+      </div>
+      {recentTransactions.map((item) => (
         <div key={item.id}>
           <div className="user-wrapper">
-            <img src={item.imgUrl} width={48} alt="Imagem do usuário logado" />
+            {/* <img src={item.imgUrl} width={48} alt="Imagem do usuário logado" /> */}
             <div className="user-info">
-              <span className="name">{item.userName}</span>
-              <span className="hour">{dateFormatTimeAgo(item.hour)!}</span>
+              <span className="name">{item.destiny}</span>
+              {item.date && (
+                <span className="hour">{dateFormatTimeAgo(item.date)!}</span>
+              )}
             </div>
-            {item.isPositive ? (
+            {item.type === 'IN' ? (
               <span className="money positive">
-                + {currentFormat(item.money)}
+                + {currentFormat(item.amount)}
               </span>
             ) : (
               <span className="money negative">
-                - {currentFormat(item.money)}
+                - {currentFormat(item.amount)}
               </span>
             )}
           </div>
